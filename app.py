@@ -133,7 +133,7 @@ with st.sidebar:
     st.markdown(
         '<p style="font-size:.8rem;color:#3F4A5A;">An analysis of how '
         'end-of-life vehicles are measured across four markets. Every figure '
-        'carries a confidence tier, and coral marks constructed or absent '
+        'carries a confidence tier, and red marks constructed or absent '
         'data throughout.</p>', unsafe_allow_html=True)
 
 # ================= Header =================
@@ -189,11 +189,11 @@ st.table(pd.DataFrame({
     "ELV count status": ["Measured","Measured (system reports)",
                          "Derived (deregistrations)","Not published"],
 }))
-claim("Outcomes are measured in one region, system-reported in a second, "
-      "derivable in a third, and absent in the fourth, which happens to be "
-      "the largest vehicle market of the four. Vehicles exported used carry "
-      "their end-of-life with them, so a market's regime determines whether "
-      "its recycling gap can be seen at all.")
+claim("Outcomes are <b>measured in the EU</b>, <b>system-reported in "
+      "Japan</b>, <b>derivable in Singapore</b>, and <b>absent in the United "
+      "States</b>, the largest vehicle market of the four. Vehicles exported "
+      "used carry their end-of-life with them, so a market's regime "
+      "determines whether its recycling gap can be seen at all.")
 st.divider()
 
 # ================= 2 =================
@@ -410,7 +410,7 @@ fig4.update_layout(height=400, barmode="group",
                    yaxis_title="Used passenger cars (SG → ID/TH/AU)",
                    yaxis_range=[0, 3100], **PLOT)
 st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
-claim("The coral bars are barely visible next to the blue, and <b>that is the "
+claim("The red bars are barely visible next to the blue, and <b>that is the "
       "finding</b>. Partner countries record importing only 4 to 12% of what "
       "Singapore reports exporting, a 10 to 25× disagreement, every year, in "
       "every corridor (Comtrade mirror, 2016 to 2020, as published in the "
@@ -501,111 +501,4 @@ st.markdown('<div id="sec6"></div>', unsafe_allow_html=True)
 st.header("6 · The US gap, and what a proof-of-concept measurement requires")
 st.markdown(
     "For the US to sit on this map as a *measured* market, in order of impact:\n\n"
-    "1. **An ELV count.** None is published, and the estimate here cannot "
-    "separate scrappage from used-vehicle export. The capture-vs-processing "
-    "distinction in Sec. 2 sets the design requirement: a US measurement "
-    "must count what *exits the fleet*, not only what *arrives at "
-    "recyclers*, or it reproduces the blind spot the EU's compliance "
-    "statistics already demonstrate.\n"
-    "2. **A used-export series.** Census USA Trade Online carries 10-digit "
-    "HTS detail that UN Comtrade flattens. Separating exports from the 14.0M "
-    "exits would close the wedge in Sec. 3 and give the US its mirror row in "
-    "Sec. 4.\n"
-    "3. **A vehicle-class concordance to M1/N1.** Absent today, and "
-    "complicated by the US sources' internal disagreement (Sec. 5).\n"
-    "4. **Japan and Singapore concordance rows.** Their rates are computed "
-    "(Sec. 2), and aligning their vehicle classes completes the four-market "
-    "panel.\n\n"
-    "The EU series supports history to 2008, and the US fleet series breaks "
-    "at the 2007 federal reclassification. A multi-year, four-market panel is "
-    "feasible within those bounds."
-)
-st.divider()
-
-# ================= Read / trust =================
-st.markdown('<div id="read"></div>', unsafe_allow_html=True)
-st.header("How to read this")
-m1, m2 = st.columns(2)
-with m1:
-    st.markdown(
-        '<span class="badge b-meas">Measured</span> — EU ELVs, rates & '
-        'recycling-of-collected (Eurostat env_waselvt); EU & member fleets '
-        '(road_eqs_carpda); US fleet (BTS 1-11); US registrations '
-        'cross-check (FHWA MV-1); US sales (FRED LTOTALNSA); Japan ELVs '
-        '(JARC manifest, FY2023); Japan fleet (e-Stat/AIRIA); Singapore '
-        'deregistrations & fleet (LTA)<br><br>'
-        '<span class="badge b-der">Derived</span> — all four rates; implied '
-        'lifetimes (1 ÷ rate, steady-state assumption); fleet-share recycled '
-        '(88.3% × 1.66%)<br><br>'
-        '<span class="badge b-lit">Literature</span> — average fleet ages '
-        '(ACEA, S&P Global Mobility, AIRIA); Singapore COE certificate term '
-        '(LTA); Japan used exports 2023 (JAMA, 1.83M); trade-mirror gap '
-        'magnitudes (Comtrade-based reconciliations); Eurostat anomaly '
-        'documentation (Poland, Greece, Malta)',
-        unsafe_allow_html=True)
-with m2:
-    st.markdown(
-        '<span class="badge b-est">Estimated</span> — US fleet exits 2023: '
-        '15,502,479 − 1,497,077 = <b>14,005,402</b>. Includes used exports. '
-        'Not a measurement.<br><br>'
-        '<span class="badge b-abs">Not published</span> — any audited US ELV '
-        'count; Singapore\'s export-vs-scrap split; a US trade mirror (Census '
-        '10-digit HTS not yet pulled); Japan/Singapore classes in the '
-        'concordance', unsafe_allow_html=True)
-
-st.markdown('<div id="trust"></div>', unsafe_allow_html=True)
-st.header("Why trust this, and where it stops")
-st.table(pd.DataFrame({
-    "Layer": ["Sources","EU rate","Capture gap (Sec. 2)","Japan rate",
-              "Singapore rate","US rate (estimate)","Consumer layer (Sec. 3)",
-              "Export mirror (Sec. 4)","Concordance (Sec. 5)"],
-    "Trust basis": [
-        "Counts come from the project's approved source register plus "
-        "national statistical systems (Eurostat, BTS/FHWA, JARC, "
-        "e-Stat/AIRIA, LTA), with figures re-verified against source "
-        "publications",
-        "Reproduces Eurostat's published 2023 totals exactly",
-        "Both inputs are Eurostat measurements: the 88.3% reuse+recycling "
-        "rate (2023) and the collection share derived above",
-        "System-reported numerator (manifest-tracked) over a national fleet "
-        "series",
-        "Numerator and denominator from the same authority (LTA)",
-        "Every input is a published series, and the arithmetic is stated in "
-        "full (Sec. 2)",
-        "Implied lifetimes are pure arithmetic on the rates, and ages are "
-        "literature-cited from fleet authorities",
-        "The Singapore mirror is charted from published reconciliation "
-        "figures; intra-EU matrices reconciled within the project; other "
-        "cells tagged to their sources",
-        "12 labels, native classifications preserved, NO_EQUIVALENT "
-        "permitted, and the US internal disagreement is visible in the rows "
-        "themselves"],
-    "Where it breaks": [
-        "The US estimate requires a sales series outside the register, so "
-        "FRED supplies it, disclosed here",
-        "M1+N1 numerator over a cars-only denominator, slightly overstated, "
-        "and the EU aggregate is partly estimated for non-reporters",
-        "The two rates sit on slightly different scopes (weight-based "
-        "compliance vs count-based collection); the order of magnitude, not "
-        "the second decimal, carries the claim",
-        "The numerator covers all vehicle classes under the law while the "
-        "denominator is passenger cars, so it is overstated, direction known",
-        "Deregistrations include exports, and the export-vs-scrap split is "
-        "unpublished",
-        "Cannot separate scrappage from export, covers a single year, and is "
-        "not a like measurement to the measured bars, which is why it is "
-        "drawn differently",
-        "Steady state is assumed, and slowly growing fleets understate "
-        "implied lifetimes modestly. The EU and Japan gaps survive the caveat",
-        "Mirror-gap magnitudes are cited, not recomputed here, and no US "
-        "mirror exists yet. Assembling one is refinement 2 (Sec. 6)",
-        "Japan and Singapore classes are not yet rowed"],
-}))
-st.markdown(
-    '<p style="font-size:.82rem;color:#3F4A5A;margin-top:1rem;">Sources: '
-    'Eurostat env_waselvt & road_eqs_carpda (2023) · BTS NTS 1-11 · FHWA MV-1 '
-    '· FRED LTOTALNSA · JARC (FY2023 ELVs) · e-Stat/AIRIA (fleet, avg age) · '
-    'JAMA (2023 exports) · Singapore LTA Annual Vehicle Statistics · ACEA · '
-    'S&P Global Mobility · UN Comtrade (mirror reconciliations) · Census USA '
-    'Trade Online. <i>The Global ELV Recycling Gap</i>, NYU Stern MSBAi '
-    'capstone.</p>', unsafe_allow_html=True)
+    "1. **An ELV count.** None is published, and the estimate
