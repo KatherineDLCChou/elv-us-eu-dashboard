@@ -7,15 +7,16 @@ st.set_page_config(page_title="How the World Measures Vehicle Recycling",
 
 # ================= Design system =================
 INK, SLATE, MIST = "#1E2430", "#3F4A5A", "#E7EBF0"
-BLUE, TEAL, AMBER, CORAL, GREY = "#1F6FB2", "#159A8C", "#E0A93E", "#C0392B", "#9AA5B1"
+BLUE, TEAL, AMBER, CORAL, GREY = "#197BBD", "#05B384", "#E0A93E", "#C0392B", "#9AA5B1"
+STEM = "#D5DBE1"
 
 st.markdown("""
 <style>
 html, body, [class*="css"] { font-family: "Segoe UI","Helvetica Neue",Arial,sans-serif; }
 .block-container { max-width: 1180px; padding-top: 2.2rem; }
 h1 { font-size: 2.05rem !important; font-weight: 700; letter-spacing: -.01em;
-     color: #1E2430; border-bottom: 3px solid #1F6FB2; padding-bottom: .55rem; }
-h2 { font-size: 1.35rem !important; font-weight: 650; color: #1F6FB2;
+     color: #1E2430; border-bottom: 3px solid #197BBD; padding-bottom: .55rem; }
+h2 { font-size: 1.35rem !important; font-weight: 650; color: #197BBD;
      margin-top: .6rem; letter-spacing: .01em; }
 h3 { font-size: 1.05rem !important; font-weight: 650; color: #3F4A5A; }
 p, li { color: #3F4A5A; font-size: .95rem; line-height: 1.55; }
@@ -24,22 +25,22 @@ p, li { color: #3F4A5A; font-size: .95rem; line-height: 1.55; }
 [data-testid="stMetricLabel"] { color: #3F4A5A !important; font-size: .82rem !important;
      text-transform: uppercase; letter-spacing: .06em; }
 [data-testid="stMetricValue"] { color: #1E2430 !important; font-weight: 700; }
-.claim { border-left: 3px solid #1F6FB2; background: #EFF5FA;
+.claim { border-left: 3px solid #197BBD; background: #EFF5FA;
      padding: .8rem 1.1rem; margin: .4rem 0 1.2rem 0;
      font-size: .92rem; line-height: 1.55; color: #1E2430; }
-.claim b { color: #1F6FB2; }
-.finding { border: 1px solid #1F6FB2; border-left: 6px solid #C0392B;
+.claim b { color: #197BBD; }
+.finding { border: 1px solid #197BBD; border-left: 6px solid #C0392B;
      padding: .9rem 1.2rem; margin: .8rem 0 1.1rem 0;
      font-size: .95rem; line-height: 1.6; color: #1E2430; background: #FFFFFF; }
 .badge { font-size: .74rem; font-weight: 700; letter-spacing: .07em;
      text-transform: uppercase; padding: .1rem .45rem; border-radius: 2px; }
-.b-meas { background:#E1EEF8; color:#1F6FB2; }
+.b-meas { background:#E1EEF8; color:#197BBD; }
 .b-der  { background:#FAF1DC; color:#8A6414; }
 .b-lit  { background:#ECECEC; color:#3F4A5A; }
 .b-est  { background:#F9E5E2; color:#C0392B; }
 .b-abs  { background:#C0392B; color:#FFFFFF; }
 [data-testid="stSidebar"] { background: #EFF5FA; }
-[data-testid="stSidebar"] a { color: #1F6FB2; text-decoration: none;
+[data-testid="stSidebar"] a { color: #197BBD; text-decoration: none;
      font-size: .9rem; line-height: 2; }
 </style>""", unsafe_allow_html=True)
 
@@ -65,6 +66,7 @@ JP_ELVS, JP_FLEET = 2_730_000, 61_950_000
 SG_DEREG, SG_FLEET = 29_089, 651_302
 EU_RATE, US_RATE = EU_ELVS/EU_FLEET, US_RETIRE/US_FLEET
 JP_RATE, SG_RATE = JP_ELVS/JP_FLEET, SG_DEREG/SG_FLEET
+EU_RECYCLING_OF_COLLECTED = 0.883   # Eurostat, EU-27 reuse+recycling rate, 2023
 REGIONS = ["🇪🇺 EU-27","🇯🇵 Japan","🇸🇬 Singapore","🇺🇸 United States"]
 RATES = [EU_RATE, JP_RATE, SG_RATE, US_RATE]
 AGES = [12.3, 9.5, 10.0, 12.5]
@@ -93,7 +95,6 @@ DISP = pd.DataFrame({
             False,False,False,False,False,True],
 })
 DISP["Rate"] = DISP.ELVs / DISP.Fleet
-DISP = DISP.sort_values("Rate", ascending=True).reset_index(drop=True)
 
 CW = pd.DataFrame([
     ("Eurostat (env_waselvt)","End-of-life vehicles (M1+N1)","light_duty_combined",""),
@@ -235,43 +236,75 @@ with st.expander("Full numerator / denominator sourcing"):
 - **🇺🇸 US** (Estimated): implied exits {US_RETIRE:,} (= FRED LTOTALNSA sales {US_SALES:,} − BTS 1-11 net fleet change {US_NET:,}) ÷ light-duty fleet {US_FLEET:,} (BTS 1-11, short + long wheelbase)
 """)
 
+st.subheader("The capture gap: the EU recycles what it collects, and collects a fraction of what exits")
+k1, k2, k3 = st.columns(3)
+k1.metric("Of ELVs collected, recycled · Measured",
+          f"{EU_RECYCLING_OF_COLLECTED:.1%}",
+          help="EU-27 reuse + recycling rate, 2023, against the 85% Directive "
+               "target (Eurostat)")
+k2.metric("Of the fleet, collected per year · Derived", f"{EU_RATE:.2%}",
+          help="4.26M audited ELVs ÷ 256.2M registered cars")
+k3.metric("Of the fleet, recycled per year · Derived",
+          f"{EU_RECYCLING_OF_COLLECTED * EU_RATE:.2%}",
+          help="88.3% × 1.66%")
+claim("Two Eurostat measurements, one story when combined: the EU recycles "
+      "<b>88.3%</b> of the ELVs it collects, comfortably above the 85% "
+      "Directive target, yet only <b>1.66%</b> of the fleet enters that "
+      "collection each year. <b>The EU's recycling gap is not a processing "
+      "problem, it is a capture problem.</b> Compliance is measured on what "
+      "arrives at treatment facilities, and the vehicles that leave as used "
+      "exports never arrive. Any policy conclusion drawn from the 88.3% "
+      "alone inherits that blind spot.")
+
 st.subheader("Within the EU audit: a sevenfold spread")
-show_eea = st.toggle("Include EEA reporters (Norway, Iceland, Liechtenstein)", True)
+ctl1, ctl2, ctl3 = st.columns([1.2, 1.2, 1.6])
+show_eea = ctl1.toggle("Include EEA reporters", True,
+                       help="Norway, Iceland, Liechtenstein file under the "
+                            "Directive but are not EU members")
+sort_mode = ctl2.radio("Sort", ["By rate", "Alphabetical"], horizontal=True)
 d = DISP if show_eea else DISP[~DISP.EEA]
+d = (d.sort_values("Rate", ascending=True) if sort_mode == "By rate"
+     else d.sort_values("Country", ascending=False)).reset_index(drop=True)
+focus = ctl3.selectbox("Highlight a country",
+                       ["None"] + sorted(d.Country.tolist()))
 fig2 = go.Figure()
-for i, (_, row) in enumerate(d.iterrows()):
-    if i % 2 == 0:
-        fig2.add_shape(type="rect", x0=0, x1=4.05, y0=i-0.5, y1=i+0.5,
-                       yref="y", xref="x", fillcolor="#F7F9FB",
-                       line_width=0, layer="below")
+for _, row in d.iterrows():
     fig2.add_shape(type="line", x0=0, x1=row.Rate*100, y0=row.Country,
-                   y1=row.Country, line=dict(color=SLATE, width=2),
-                   layer="below", opacity=0.55)
+                   y1=row.Country, line=dict(color=STEM, width=1.5),
+                   layer="below")
+dot_fill, dot_line, txt_col = [], [], []
+for _, row in d.iterrows():
+    if row.Country == focus:
+        dot_fill.append(CORAL); dot_line.append(CORAL); txt_col.append(CORAL)
+    elif row.EEA:
+        dot_fill.append("white"); dot_line.append(GREY); txt_col.append(SLATE)
+    else:
+        dot_fill.append(BLUE); dot_line.append(BLUE); txt_col.append(SLATE)
 fig2.add_trace(go.Scatter(
     x=d.Rate*100, y=d.Country, mode="markers+text",
-    text=[f"{r:.2%}" for r in d.Rate],
-    textposition="middle right", textfont=dict(size=10, color=SLATE),
-    marker=dict(size=11,
-                color=["white" if r else BLUE for r in d.EEA],
-                line=dict(color=[GREY if r else BLUE for r in d.EEA], width=2)),
+    text=[f"<b>{r:.2%}</b>" if c == focus else f"{r:.2%}"
+          for r, c in zip(d.Rate, d.Country)],
+    textposition="middle right",
+    textfont=dict(size=10, color=txt_col),
+    marker=dict(size=11, color=dot_fill, line=dict(color=dot_line, width=2)),
     hovertemplate="%{y}: %{x:.2f}%<extra></extra>", showlegend=False,
     cliponaxis=False))
 fig2.add_vline(x=EU_RATE*100, line_dash="dot", line_color=CORAL,
                annotation_text=f"EU-27 aggregate {EU_RATE:.2%}",
                annotation_position="top")
-for country, label, yshift in [("Ireland", "documents the most", -16),
-                               ("Germany", "the export gap", -16)]:
-    if country in d.Country.values:
-        r = d[d.Country == country].iloc[0]
-        fig2.add_annotation(x=r.Rate*100, y=country, text=f"<b>{label}</b>",
-                            showarrow=False, xshift=14, yshift=yshift,
-                            xanchor="left", font=dict(size=11, color=CORAL))
 fig2.update_layout(height=680, xaxis_title="Documented scrappage rate, 2023 (%)",
-                   xaxis_range=[0, 4.4], **PLOT)
+                   xaxis_range=[0, 4.6], **PLOT)
 st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 claim("Documented rates span 3.8% in Ireland to 0.5% in Germany inside one "
-      "audit regime. Hollow markers are EEA reporters, which file under the "
-      "Directive but are not EU members.")
+      "audit regime, consistent with Germany's documented volume of "
+      "deregistered vehicles whose statistical whereabouts are unknown, "
+      "predominantly used exports. Eurostat's own anomaly documentation "
+      "corroborates the instability: Poland's audited recycling rate "
+      "exceeded 100% in 2019 and 2020 (backlog clearing), Greece's rates "
+      "collapsed in 2015 and 2019 when low scrap prices triggered "
+      "stockpiling, and Malta's 2023 rate dropped while material waited on "
+      "export pricing. Even audited rates move with export timing and metal "
+      "prices. Hollow markers are EEA reporters.")
 with st.expander("Full country table"):
     st.dataframe(d.sort_values("Rate", ascending=False)
                  .style.format({"ELVs":"{:,.0f}","Fleet":"{:,.0f}","Rate":"{:.2%}"}),
@@ -295,7 +328,7 @@ ages_o = AGES[::-1]
 lives_o = [1/r for r in RATES][::-1]
 for reg, a, l in zip(order, ages_o, lives_o):
     fig3.add_shape(type="line", x0=a, x1=l, y0=reg, y1=reg,
-                   line=dict(color=SLATE, width=4), opacity=0.75)
+                   line=dict(color=SLATE, width=4), opacity=0.7)
     fig3.add_annotation(x=(a+l)/2, y=reg, text=f"<b>+{l-a:.0f} yrs</b>",
                         showarrow=False, yshift=15, font=dict(size=11, color=CORAL))
 fig3.add_trace(go.Scatter(
@@ -384,8 +417,9 @@ st.table(pd.DataFrame({
         "Used exports occur at scale but sit unseparated inside the 14.0M "
         "constructed exits (Sec. 2)"],
     "Mirror record": [
-        "Intra-EU flows are partially tracked; extra-EU destination records "
-        "are not reconciled in the ELV statistics",
+        "Intra-EU dispatch and arrival matrices reconcile member-state flows "
+        "for 2023 within this project; extra-EU destination records remain "
+        "unreconciled in the ELV statistics",
         "Destination-side ELV treatment is unrecorded, and most volume lands "
         "in markets without formal ELV systems (Comtrade with UNEP-derived "
         "classification)",
@@ -408,10 +442,11 @@ st.table(pd.DataFrame({
 claim("The export mirror is broken everywhere it has been tested, and HS 8703 "
       "cannot distinguish a used car from a new one. The wedge in Section 3 "
       "therefore cannot be closed from trade data as published. It can be "
-      "bounded in Singapore, estimated at destination for Japan, inferred "
-      "from audit arithmetic in the EU, or, in the US, not yet seen at all. "
-      "<b>All four regimes lose the same flow at the same point, the border, "
-      "regardless of how strong their domestic measurement is.</b>")
+      "bounded in Singapore, estimated at destination for Japan, partially "
+      "reconciled inside the EU with extra-EU flows still open, or, in the "
+      "US, not yet seen at all. <b>All four regimes lose the same flow at "
+      "the same point, the border, regardless of how strong their domestic "
+      "measurement is.</b>")
 st.divider()
 
 # ================= 5 =================
@@ -455,7 +490,11 @@ st.header("6 · The US gap, and what a proof-of-concept measurement requires")
 st.markdown(
     "For the US to sit on this map as a *measured* market, in order of impact:\n\n"
     "1. **An ELV count.** None is published, and the estimate here cannot "
-    "separate scrappage from used-vehicle export.\n"
+    "separate scrappage from used-vehicle export. The capture-vs-processing "
+    "distinction in Sec. 2 sets the design requirement: a US measurement "
+    "must count what *exits the fleet*, not only what *arrives at "
+    "recyclers*, or it reproduces the blind spot the EU's compliance "
+    "statistics already demonstrate.\n"
     "2. **A used-export series.** Census USA Trade Online carries 10-digit "
     "HTS detail that UN Comtrade flattens. Separating exports from the 14.0M "
     "exits would close the wedge in Sec. 3 and give the US its mirror row in "
@@ -477,17 +516,20 @@ st.header("How to read this")
 m1, m2 = st.columns(2)
 with m1:
     st.markdown(
-        '<span class="badge b-meas">Measured</span> — EU ELVs & rates '
-        '(Eurostat env_waselvt); EU & member fleets (road_eqs_carpda); US '
-        'fleet (BTS 1-11); US registrations cross-check (FHWA MV-1); US sales '
-        '(FRED LTOTALNSA); Japan ELVs (JARC manifest, FY2023); Japan fleet '
-        '(e-Stat/AIRIA); Singapore deregistrations & fleet (LTA)<br><br>'
+        '<span class="badge b-meas">Measured</span> — EU ELVs, rates & '
+        'recycling-of-collected (Eurostat env_waselvt); EU & member fleets '
+        '(road_eqs_carpda); US fleet (BTS 1-11); US registrations '
+        'cross-check (FHWA MV-1); US sales (FRED LTOTALNSA); Japan ELVs '
+        '(JARC manifest, FY2023); Japan fleet (e-Stat/AIRIA); Singapore '
+        'deregistrations & fleet (LTA)<br><br>'
         '<span class="badge b-der">Derived</span> — all four rates; implied '
-        'lifetimes (1 ÷ rate, steady-state assumption)<br><br>'
+        'lifetimes (1 ÷ rate, steady-state assumption); fleet-share recycled '
+        '(88.3% × 1.66%)<br><br>'
         '<span class="badge b-lit">Literature</span> — average fleet ages '
         '(ACEA, S&P Global Mobility, AIRIA); Singapore COE certificate term '
         '(LTA); Japan used exports 2023 (JAMA, 1.83M); trade-mirror gap '
-        'magnitudes (Comtrade-based reconciliations)',
+        'magnitudes (Comtrade-based reconciliations); Eurostat anomaly '
+        'documentation (Poland, Greece, Malta)',
         unsafe_allow_html=True)
 with m2:
     st.markdown(
@@ -502,8 +544,8 @@ with m2:
 st.markdown('<div id="trust"></div>', unsafe_allow_html=True)
 st.header("Why trust this, and where it stops")
 st.table(pd.DataFrame({
-    "Layer": ["Sources","EU rate","Japan rate","Singapore rate",
-              "US rate (estimate)","Consumer layer (Sec. 3)",
+    "Layer": ["Sources","EU rate","Capture gap (Sec. 2)","Japan rate",
+              "Singapore rate","US rate (estimate)","Consumer layer (Sec. 3)",
               "Export mirror (Sec. 4)","Concordance (Sec. 5)"],
     "Trust basis": [
         "Counts come from the project's approved source register plus "
@@ -511,6 +553,8 @@ st.table(pd.DataFrame({
         "e-Stat/AIRIA, LTA), with figures re-verified against source "
         "publications",
         "Reproduces Eurostat's published 2023 totals exactly",
+        "Both inputs are Eurostat measurements: the 88.3% reuse+recycling "
+        "rate (2023) and the collection share derived above",
         "System-reported numerator (manifest-tracked) over a national fleet "
         "series",
         "Numerator and denominator from the same authority (LTA)",
@@ -519,7 +563,8 @@ st.table(pd.DataFrame({
         "Implied lifetimes are pure arithmetic on the rates, and ages are "
         "literature-cited from fleet authorities",
         "The Singapore mirror is charted from published reconciliation "
-        "figures, and the other cells are tagged to their sources",
+        "figures; intra-EU matrices reconciled within the project; other "
+        "cells tagged to their sources",
         "12 labels, native classifications preserved, NO_EQUIVALENT "
         "permitted, and the US internal disagreement is visible in the rows "
         "themselves"],
@@ -528,6 +573,9 @@ st.table(pd.DataFrame({
         "FRED supplies it, disclosed here",
         "M1+N1 numerator over a cars-only denominator, slightly overstated, "
         "and the EU aggregate is partly estimated for non-reporters",
+        "The two rates sit on slightly different scopes (weight-based "
+        "compliance vs count-based collection); the order of magnitude, not "
+        "the second decimal, carries the claim",
         "The numerator covers all vehicle classes under the law while the "
         "denominator is passenger cars, so it is overstated, direction known",
         "Deregistrations include exports, and the export-vs-scrap split is "
