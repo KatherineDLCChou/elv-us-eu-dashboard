@@ -155,6 +155,16 @@ st.markdown(
     '<span class="badge b-est">Estimated</span> constructed by the analysis &nbsp;·&nbsp; '
     '<span class="badge b-abs">Not published</span> no figure exists',
     unsafe_allow_html=True)
+st.markdown(
+    "**Scope note.** This analysis compares light-duty vehicles, meaning cars "
+    "plus vans and light trucks, because that is the only population all four "
+    "measurement regimes can approximately express. A passenger-car-only "
+    "comparison cannot be constructed from published data: the EU reports M1 "
+    "and N1 combined, Japan's law spans all vehicle classes, and the US "
+    "'Automobiles' class excludes most American family vehicles. Native "
+    "vehicle classes are preserved in Section 5, where exclusions are "
+    "recorded as visible decisions."
+)
 st.divider()
 
 # ================= 1 =================
