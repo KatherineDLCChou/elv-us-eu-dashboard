@@ -222,7 +222,7 @@ for i, (reg, rate, col) in enumerate(zip(REGIONS, RATES, [BLUE, TEAL, AMBER, Non
                                  pattern=dict(shape="/", fgcolor=CORAL)))
     fig1.add_annotation(x=reg, y=rate*100, text=f"<b>{rate:.2%}</b>",
                         showarrow=False, yshift=14, font=dict(size=15, color=INK))
-    fig1.add_annotation(x=reg, y=0, text=tier[i], showarrow=False, yshift=-34,
+    fig1.add_annotation(x=reg, y=0, text=tier[i], showarrow=False, yshift=-52,
                         font=dict(size=10, color=SLATE))
 fig1.add_hline(y=0, line_color=SLATE, line_width=1)
 fig1.update_layout(height=420, yaxis_title="Vehicles leaving fleet, % of fleet (2023)",
@@ -230,8 +230,10 @@ fig1.update_layout(height=420, yaxis_title="Vehicles leaving fleet, % of fleet (
 st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
 claim("These four bars are four different kinds of number, and each is drawn "
       "to say so. Solid fills are measured or derived, and the outlined hatch "
-      "is constructed. The US figure: <b>implied exits = 15,502,479 sales − "
-      "1,497,077 net fleet growth = 14,005,402</b>, over a 259.2M light-duty "
+      "is constructed. The US figure: "
+      "<span style='background:#F9E5E2;padding:.05rem .3rem;'>"
+      "<b>implied exits = 15,502,479 sales − 1,497,077 net fleet growth = "
+      "14,005,402</b></span>, over a 259.2M light-duty "
       "fleet, counting every exit including used-vehicle exports, which the "
       "EU and Japan counts exclude. Scope caveats, direction known: the EU "
       "numerator includes vans over a cars-only denominator, and Japan's "
