@@ -72,6 +72,13 @@ EU_RATE, US_RATE = EU_ELVS/EU_FLEET, US_RETIRE/US_FLEET
 JP_RATE, SG_RATE = JP_ELVS/JP_FLEET, SG_DEREG/SG_FLEET
 EU_RATE_REPORTED_26 = EU_ELVS_REPORTED_26 / EU_FLEET_REPORTED_26
 EU_RECYCLING_OF_COLLECTED = 0.883   # Eurostat, EU-27 reuse+recycling rate, 2023
+# EU-27 fleet CAGR 2013-2024 (road_eqs_carpda, TOTAL/NR/EU27_2020): 1.466%.
+# Used for the growth-adjusted implied lifetime, L = ln(1 + g/r) / g, a
+# fixed-lifetime cohort model brought to the data (yardstick, disclosed).
+EU_FLEET_CAGR = 0.01466
+import math
+def implied_lifetime_growth_adj(rate, g=EU_FLEET_CAGR):
+    return math.log(1 + g / rate) / g
 REGIONS = ["🇪🇺 EU-27","🇯🇵 Japan","🇸🇬 Singapore","🇺🇸 United States"]
 RATES = [EU_RATE, JP_RATE, SG_RATE, US_RATE]
 AGES = [12.3, 9.5, 10.0, 12.5]
@@ -340,7 +347,8 @@ claim(f"Among EU-27 members, documented rates run from {EU_TOP.Rate:.2%} in "
       "when low scrap prices triggered stockpiling, and Malta's 2023 rate "
       "dropped while material waited on export pricing. Even audited rates "
       "move with export timing and metal prices. Hollow markers are EEA "
-      "reporters, which sit outside the EU-27 range quoted above. "
+      "reporters, which are not EU members and are excluded from the range "
+      "quoted above. "
       "<b>Romania is absent from this chart</b>, having not reported ELV data "
       "since 2020; Eurostat estimates its contribution inside the EU-27 "
       "aggregate line.")
@@ -396,19 +404,27 @@ claim(f"Replacement is a spending decision, and documented scrappage is a "
       f"measurement event. In every measured market they are decades apart, "
       f"and the line between each pair of dots <b>is</b> the gap. EU consumers "
       f"replace around year 12, yet the documented rate implies cars live "
-      f"<b>{1/EU_RATE:.0f} years</b>. That stretch is vehicles leaving the "
-      f"audit as used exports, not deaths. Japan is sharper: inspection "
-      f"(shaken) costs push replacement toward year 9 or 10, and 1.83M used "
-      f"vehicles exported in 2023 (JAMA) exit the recycling system young. "
-      f"Singapore's COE makes replacement timing a policy price rather than a "
-      f"consumer choice. The US is the near-reconciled case, an implied "
-      f"{1/US_RATE:.0f} years against a 12.5-year average age, precisely "
-      f"because its constructed count includes exports. <b>The wedge between "
-      f"replacement and documented end-of-life is the recycling gap's supply "
-      f"side. Consumer upgrade cycles feed the export flow that measurement "
-      f"loses.</b> The steady-state assumption is stated, and slowly growing "
-      f"fleets understate implied lifetimes modestly. The EU and Japan "
-      f"impossibilities survive the caveat.")
+      f"<b>{1/EU_RATE:.0f} years</b>, and the impossibility survives every "
+      f"correction. The 1 ÷ rate arithmetic assumes a steady-state fleet, and "
+      f"the EU fleet is growing (1.47%/yr, 2013–2024, Eurostat), which makes "
+      f"the naive figure an overstatement; adjusting for that growth still "
+      f"implies <b>{implied_lifetime_growth_adj(EU_RATE):.0f} years</b>. "
+      f"Excluding Germany, whose 0.51% rate holds the aggregate down, still "
+      f"implies {1/EU_RATE_EX_DE:.0f} years, and applying both corrections "
+      f"together still implies "
+      f"{implied_lifetime_growth_adj(EU_RATE_EX_DE):.0f} years, roughly "
+      f"triple the fleet's 12.3-year average age. That stretch is vehicles "
+      f"leaving the audit as used exports, not deaths. Japan is sharper: "
+      f"inspection (shaken) costs push replacement toward year 9 or 10, and "
+      f"1.83M used vehicles exported in 2023 (JAMA) exit the recycling system "
+      f"young. Singapore's COE makes replacement timing a policy price rather "
+      f"than a consumer choice. The US is the near-reconciled case, an "
+      f"implied {1/US_RATE:.0f} years against a 12.5-year average age, "
+      f"precisely because its constructed count includes exports. <b>The "
+      f"wedge between replacement and documented end-of-life is the recycling "
+      f"gap's supply side. Consumer upgrade cycles feed the export flow that "
+      f"measurement loses.</b> The growth adjustment is a fixed-lifetime "
+      f"cohort model brought to the data, not a Eurostat figure.")
 st.divider()
 
 # ================= 4 =================
@@ -564,7 +580,7 @@ with m1:
         '(JARC manifest, FY2023); Japan fleet (e-Stat/AIRIA); Singapore '
         'deregistrations & fleet (LTA)<br><br>'
         '<span class="badge b-der">Derived</span> — all four rates; implied '
-        'lifetimes (1 ÷ rate, steady-state assumption); fleet-share recycled '
+        'lifetimes (1 ÷ rate, steady-state assumption) and the growth-adjusted EU lifetime (cohort model, EU fleet CAGR 1.47%); fleet-share recycled '
         '(88.3% × 1.66%); the EU-27 spread and the rate excluding Germany '
         '(Sec. 2)<br><br>'
         '<span class="badge b-lit">Literature</span> — average fleet ages '
@@ -637,8 +653,11 @@ st.table(pd.DataFrame({
         "Cannot separate scrappage from export, covers a single year, and is "
         "not a like measurement to the measured bars, which is why it is "
         "drawn differently",
-        "Steady state is assumed, and slowly growing fleets understate "
-        "implied lifetimes modestly. The EU and Japan gaps survive the caveat",
+        "Steady state is assumed. In a growing fleet the stock skews young, "
+        "so 1 ÷ rate OVERSTATES lifetime; the growth-adjusted EU figure "
+        "(43 years, at the 2013–2024 fleet CAGR of 1.47%) corrects for "
+        "this with a cohort model brought to the data, and the EU and "
+        "Japan impossibilities survive the correction",
         "Mirror-gap magnitudes are cited, not recomputed here, and no US "
         "mirror exists yet. Assembling one is refinement 2 (Sec. 6)",
         "Japan and Singapore classes are not yet rowed"],
