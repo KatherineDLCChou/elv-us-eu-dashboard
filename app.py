@@ -49,7 +49,7 @@ CW = pd.DataFrame([
     ("US BTS (NTS 1-11)","Light duty vehicle, long wheel base","light_duty_combined",
      "Meaningful only summed with short-wheel-base line."),
     ("US BTS (NTS 1-11)","Truck, single-unit 2-axle 6-tire+","heavy_goods",
-     "Outside passenger scope."),
+     "Split from light trucks here — the split MV-1 cannot make."),
     ("US BTS (NTS 1-11)","Truck, combination","heavy_goods","Outside passenger scope."),
     ("US BTS (NTS 1-11)","Bus","bus",""),
     ("US BTS (NTS 1-11)","Highway, total (registered)","all_vehicles",""),
@@ -275,17 +275,36 @@ st.divider()
 st.header("⑤ Where the classifications align — and where they cannot")
 st.markdown(
     "Cross-region comparison requires reconciling classification systems never "
-    "designed to align. The concordance preserves each source's native label and "
-    "assigns a harmonized class where one defensibly exists — **NO_EQUIVALENT** "
-    "recorded where none does. Decisive entries: no US federal class corresponds "
-    "to EU M1, and US 'Trucks' merges light and heavy vehicles the EU separates "
-    "at 3.5t."
+    "designed to align. The concordance preserves each source's native label "
+    "and assigns a harmonized class where one defensibly exists — "
+    "**NO_EQUIVALENT** recorded where none does. Decisive entries: no US "
+    "federal class corresponds to EU M1, and US 'Trucks' merges light and "
+    "heavy vehicles the EU separates at 3.5t."
+)
+st.markdown(
+    "> **Finding: the classification disagreement is itself a data point.** "
+    "The two US federal sources on this page disagree with *each other* — "
+    "FHWA MV-1 reports all trucks in one undifferentiated column, while BTS "
+    "Table 1-11 splits light-duty from heavy. The US therefore lacks not just "
+    "an ELV count but a **single consistent vehicle classification** — meaning "
+    "any future US measurement must first choose which federal taxonomy to "
+    "measure in. No comparable internal disagreement exists in the EU, Japan, "
+    "or Singapore systems, each of which classifies under one authority."
 )
 st.dataframe(CW, use_container_width=True)
-st.caption("**Claim:** comparison is only possible at the combined light-duty "
-           "level because that is the only scope both systems can approximately "
-           "express. The same structure extends to Japan's registration classes "
-           "(incl. kei vehicles) and Singapore's COE categories — not yet rowed.")
+st.caption(
+    "**Claim:** comparison is only possible at the combined light-duty level "
+    "because that is the only scope both systems can approximately express. "
+    "Non-passenger classes are rowed deliberately: the concordance maps the "
+    "full classification terrain so that exclusions are visible decisions "
+    "rather than omissions; so that Japan's numerator — which spans all "
+    "vehicle classes under its law — can be described at all; and because "
+    "the US sources' internal disagreement (see finding above) is only "
+    "demonstrable with the non-passenger rows present. Scope is enforced in "
+    "the analysis (§2), not by deleting rows. The same structure extends to "
+    "Japan's registration classes (incl. kei vehicles) and Singapore's COE "
+    "categories — not yet rowed."
+)
 st.divider()
 
 # ============ 6 · The gap and the path ============
@@ -297,7 +316,8 @@ st.markdown(
     "2. **A used-export series** — Census USA Trade Online carries 10-digit HTS "
     "detail that UN Comtrade flattens; separating exports from the 14.0M exits "
     "would close the wedge in §3 and give the US its mirror row in §4.\n"
-    "3. **A vehicle-class concordance to M1/N1** — absent today (§5).\n"
+    "3. **A vehicle-class concordance to M1/N1** — absent today, and "
+    "complicated by the US sources' internal disagreement (§5).\n"
     "4. **Japan/Singapore concordance rows** — their rates are computed (§2); "
     "aligning their vehicle classes completes the four-market panel.\n\n"
     "The EU series supports history to 2008; the US fleet series breaks at the "
@@ -334,7 +354,7 @@ st.header("Why trust this — and where it stops")
 st.table(pd.DataFrame({
     "Layer": ["Sources","EU rate","Japan rate","Singapore rate",
               "US rate (estimate)","Consumer layer (§3)","Export mirror (§4)",
-              "Concordance"],
+              "Concordance (§5)"],
     "Trust basis": [
         "Counts from the project's approved register plus national statistical "
         "systems (Eurostat, BTS/FHWA, JARC, e-Stat/AIRIA, LTA); figures "
@@ -347,7 +367,8 @@ st.table(pd.DataFrame({
         "literature-cited from fleet authorities",
         "Evidence assembled from published trade-mirror reconciliations and "
         "national export statistics; each cell tagged to its source",
-        "12 labels, native classifications preserved, NO_EQUIVALENT permitted"],
+        "12 labels, native classifications preserved, NO_EQUIVALENT permitted; "
+        "the US internal disagreement is visible in the rows themselves"],
     "Where it breaks": [
         "US estimate requires a sales series outside the register; FRED "
         "supplies it — disclosed",
