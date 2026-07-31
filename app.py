@@ -60,12 +60,17 @@ PLOT = dict(
 
 # ================= Data =================
 EU_ELVS, EU_FLEET = 4_264_000, 256_229_781
+# Of EU_ELVS, ~79,746 (1.9%) is Eurostat's estimate for Romania, which has not
+# reported ELV data since 2020. The 26 reporting members sum to 4,184,254 ELVs
+# over 248,123,211 cars = 1.69%. Disclosed in Sec. 2 and the trust table.
+EU_ELVS_REPORTED_26, EU_FLEET_REPORTED_26 = 4_184_254, 248_123_211
 US_FLEET, US_SALES, US_NET = 259_238_294, 15_502_479, 1_497_077
 US_RETIRE = US_SALES - US_NET
 JP_ELVS, JP_FLEET = 2_730_000, 61_950_000
 SG_DEREG, SG_FLEET = 29_089, 651_302
 EU_RATE, US_RATE = EU_ELVS/EU_FLEET, US_RETIRE/US_FLEET
 JP_RATE, SG_RATE = JP_ELVS/JP_FLEET, SG_DEREG/SG_FLEET
+EU_RATE_REPORTED_26 = EU_ELVS_REPORTED_26 / EU_FLEET_REPORTED_26
 EU_RECYCLING_OF_COLLECTED = 0.883   # Eurostat, EU-27 reuse+recycling rate, 2023
 REGIONS = ["🇪🇺 EU-27","🇯🇵 Japan","🇸🇬 Singapore","🇺🇸 United States"]
 RATES = [EU_RATE, JP_RATE, SG_RATE, US_RATE]
@@ -201,7 +206,9 @@ st.markdown('<div id="sec2"></div>', unsafe_allow_html=True)
 st.header("2 · The rates each regime supports, 2023")
 c = st.columns(4)
 c[0].metric("🇪🇺 EU-27 · Measured", f"{EU_RATE:.2%}",
-            help="4,264,000 audited ELVs ÷ 256,229,781 cars (Eurostat)")
+            help="4,264,000 ELVs ÷ 256,229,781 cars (Eurostat). About 80,000 "
+                 "of the numerator is Eurostat's estimate for Romania, which "
+                 "has not reported since 2020")
 c[1].metric("🇯🇵 Japan · Measured*", f"{JP_RATE:.2%}",
             help="2,730,000 ELVs (JARC manifest, FY2023) ÷ 61,950,000 cars (e-Stat/AIRIA)")
 c[2].metric("🇸🇬 Singapore · Derived", f"{SG_RATE:.2%}",
@@ -242,7 +249,7 @@ claim("These four bars are four different kinds of number, and each is drawn "
       "not better or worse. The quantities are simply constructed differently.")
 with st.expander("Full numerator / denominator sourcing"):
     st.markdown(f"""
-- **🇪🇺 EU-27** (Measured): audited ELVs {EU_ELVS:,} (Eurostat env_waselvt) ÷ passenger cars {EU_FLEET:,} (Eurostat road_eqs_carpda)
+- **🇪🇺 EU-27** (Measured): ELVs {EU_ELVS:,} (Eurostat env_waselvt, EU-27 aggregate) ÷ passenger cars {EU_FLEET:,} (Eurostat road_eqs_carpda). The ELV aggregate is published rounded to the nearest thousand and includes roughly 80,000 vehicles (1.9%) estimated by Eurostat for **Romania**, which has not reported ELV data since 2020. Summing the 26 reporting member states instead gives {EU_ELVS_REPORTED_26:,} ELVs over {EU_FLEET_REPORTED_26:,} cars, a rate of {EU_RATE_REPORTED_26:.2%}.
 - **🇯🇵 Japan** (Measured*): ELVs collected for dismantling {JP_ELVS:,} (JARC manifest system, FY2023) ÷ passenger cars in use {JP_FLEET:,} (e-Stat/AIRIA, Mar 2023)
 - **🇸🇬 Singapore** (Derived): permanent car deregistrations {SG_DEREG:,} ÷ cars & station-wagons {SG_FLEET:,} (both LTA Annual Vehicle Statistics)
 - **🇺🇸 US** (Estimated): implied exits {US_RETIRE:,} (= FRED LTOTALNSA sales {US_SALES:,} − BTS 1-11 net fleet change {US_NET:,}) ÷ light-duty fleet {US_FLEET:,} (BTS 1-11, short + long wheelbase)
@@ -316,7 +323,9 @@ claim("Documented rates span 3.8% in Ireland to 0.5% in Germany inside one "
       "collapsed in 2015 and 2019 when low scrap prices triggered "
       "stockpiling, and Malta's 2023 rate dropped while material waited on "
       "export pricing. Even audited rates move with export timing and metal "
-      "prices. Hollow markers are EEA reporters.")
+      "prices. Hollow markers are EEA reporters. <b>Romania is absent from "
+      "this chart</b>, having not reported ELV data since 2020; Eurostat "
+      "estimates its contribution inside the EU-27 aggregate line.")
 with st.expander("Full country table"):
     st.dataframe(d.sort_values("Rate", ascending=False)
                  .style.format({"ELVs":"{:,.0f}","Fleet":"{:,.0f}","Rate":"{:.2%}"}),
@@ -529,7 +538,9 @@ m1, m2 = st.columns(2)
 with m1:
     st.markdown(
         '<span class="badge b-meas">Measured</span> — EU ELVs, rates & '
-        'recycling-of-collected (Eurostat env_waselvt); EU & member fleets '
+        'recycling-of-collected (Eurostat env_waselvt; the EU-27 ELV '
+        'aggregate is 98% reported, with roughly 80,000 estimated by '
+        'Eurostat for Romania); EU & member fleets '
         '(road_eqs_carpda); US fleet (BTS 1-11); US registrations '
         'cross-check (FHWA MV-1); US sales (FRED LTOTALNSA); Japan ELVs '
         '(JARC manifest, FY2023); Japan fleet (e-Stat/AIRIA); Singapore '
@@ -551,7 +562,7 @@ with m2:
         '<span class="badge b-abs">Not published</span> — any audited US ELV '
         'count; Singapore\'s export-vs-scrap split; a US trade mirror (Census '
         '10-digit HTS not yet pulled); Japan/Singapore classes in the '
-        'concordance', unsafe_allow_html=True)
+        'concordance; Romania\'s ELV counts since 2020', unsafe_allow_html=True)
 
 st.markdown('<div id="trust"></div>', unsafe_allow_html=True)
 st.header("Why trust this, and where it stops")
@@ -564,7 +575,8 @@ st.table(pd.DataFrame({
         "national statistical systems (Eurostat, BTS/FHWA, JARC, "
         "e-Stat/AIRIA, LTA), with figures re-verified against source "
         "publications",
-        "Reproduces Eurostat's published 2023 totals exactly",
+        "Reproduces Eurostat's published 2023 totals exactly, and the "
+        "26 reporting member states sum to 1.69% independently",
         "Both inputs are Eurostat measurements: the 88.3% reuse+recycling "
         "rate (2023) and the collection share derived above",
         "System-reported numerator (manifest-tracked) over a national fleet "
@@ -583,8 +595,11 @@ st.table(pd.DataFrame({
     "Where it breaks": [
         "The US estimate requires a sales series outside the register, so "
         "FRED supplies it, disclosed here",
-        "M1+N1 numerator over a cars-only denominator, slightly overstated, "
-        "and the EU aggregate is partly estimated for non-reporters",
+        "M1+N1 numerator over a cars-only denominator, slightly overstated. "
+        "The EU-27 aggregate is published rounded and includes about 80,000 "
+        "ELVs (1.9%) estimated by Eurostat for Romania, which has not "
+        "reported since 2020, so the numerator is 98% reported rather than "
+        "wholly reported",
         "The two rates sit on slightly different scopes (weight-based "
         "compliance vs count-based collection); the order of magnitude, not "
         "the second decimal, carries the claim",
