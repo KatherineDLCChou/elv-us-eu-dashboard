@@ -13,7 +13,6 @@ JP_ELVS, JP_FLEET = 2_730_000, 61_950_000          # JARC FY2023; e-Stat/AIRIA M
 SG_DEREG, SG_FLEET = 29_089, 651_302               # LTA 2023 (cars & station-wagons)
 EU_RATE, US_RATE = EU_ELVS/EU_FLEET, US_RETIRE/US_FLEET
 JP_RATE, SG_RATE = JP_ELVS/JP_FLEET, SG_DEREG/SG_FLEET
-AVG_AGE = {"EU-27": 12.3, "United States": 12.5, "Japan": 9.5}  # ACEA / S&P / AIRIA
 
 DISP = pd.DataFrame({
     "Country": ["Ireland","Norway","Bulgaria","Iceland","Sweden","Denmark","France",
@@ -57,15 +56,19 @@ CW = pd.DataFrame([
 ], columns=["Source system","Native class label","Harmonized class","Note"])
 
 BLUE, TEAL, AMBER, RED, GREY = "#1a5276","#117864","#b9770e","#922b21","#8a8a8a"
+REGIONS = ["EU-27","Japan","Singapore","United States"]
+RATES = [EU_RATE, JP_RATE, SG_RATE, US_RATE]
+AGES = [12.3, 9.5, 10.0, 12.5]   # ACEA · AIRIA · COE certificate term · S&P
+AGE_SRC = ["ACEA","AIRIA","COE certificate term (LTA)","S&P Global Mobility"]
 
 st.title("🚗 How the World Measures Vehicle Recycling")
 st.markdown(
     "**Four major markets report end-of-life vehicles four different ways — where "
     "one reports them at all.** This page maps each region's measurement regime, "
-    "computes the scrappage rate each regime's data supports with the arithmetic "
-    "written out, tests every rate against fleet-age behavior, documents where the "
-    "classifications align and where they cannot, and identifies what a US "
-    "measurement would require."
+    "states the scrappage rate each regime's data supports, shows how consumer "
+    "replacement behavior drives the numbers, documents where the classifications "
+    "align and where they cannot, and identifies what a US measurement would "
+    "require."
 )
 st.markdown("**Confidence legend:** ✅ measured (audited / system-reported) · "
             "🔧 derived from measured · 📚 literature-cited · "
@@ -75,7 +78,7 @@ st.divider()
 # ============ 1 · Regimes ============
 st.header("① The barometers — what each region measures, and under what mandate")
 st.table(pd.DataFrame({
-    "Region": ["EU-27 (+EEA)","Japan","Singapore","United States"],
+    "Region": REGIONS,
     "Mandate": ["Directive 2000/53/EC — mandatory annual reporting",
                 "Automobile Recycling Law (2005) — owner-funded, manifest-tracked",
                 "COE system (LTA) — deregistration with proof of disposal",
@@ -100,22 +103,18 @@ st.caption(
 )
 st.divider()
 
-# ============ 2 · Rates, with the math ============
-st.header("② The rates each regime supports — with the arithmetic written out")
+# ============ 2 · Rates ============
+st.header("② The rates each regime supports — 2023")
 c = st.columns(4)
-c[0].metric("EU-27 ✅", f"{EU_RATE:.2%}")
-c[1].metric("Japan ✅*", f"{JP_RATE:.2%}")
-c[2].metric("Singapore 🔧", f"{SG_RATE:.2%}")
-c[3].metric("United States ⚠️", f"{US_RATE:.2%}")
-
-st.markdown(f"""
-| Region | Numerator (vehicles leaving the fleet) | Denominator (registered fleet) | Rate |
-|---|---|---|---|
-| **EU-27** ✅ | audited ELVs = **{EU_ELVS:,}** (Eurostat) | passenger cars = **{EU_FLEET:,}** (Eurostat) | {EU_ELVS:,} ÷ {EU_FLEET:,} = **{EU_RATE:.2%}** |
-| **Japan** ✅* | ELVs collected for dismantling = **{JP_ELVS:,}** (JARC, FY2023) | passenger cars in use = **{JP_FLEET:,}** (e-Stat/AIRIA) | {JP_ELVS:,} ÷ {JP_FLEET:,} = **{JP_RATE:.2%}** |
-| **Singapore** 🔧 | car deregistrations = **{SG_DEREG:,}** (LTA) | cars & station-wagons = **{SG_FLEET:,}** (LTA) | {SG_DEREG:,} ÷ {SG_FLEET:,} = **{SG_RATE:.2%}** |
-| **US** ⚠️ | implied exits = sales **{US_SALES:,}** − net fleet change **{US_NET:,}** = **{US_RETIRE:,}** (FRED − BTS) | light-duty vehicles = **{US_FLEET:,}** (BTS 1-11) | {US_RETIRE:,} ÷ {US_FLEET:,} = **{US_RATE:.2%}** |
-""")
+c[0].metric("EU-27 ✅", f"{EU_RATE:.2%}",
+            help="4,264,000 audited ELVs ÷ 256,229,781 cars (Eurostat)")
+c[1].metric("Japan ✅*", f"{JP_RATE:.2%}",
+            help="2,730,000 ELVs (JARC manifest, FY2023) ÷ 61,950,000 cars "
+                 "(e-Stat/AIRIA)")
+c[2].metric("Singapore 🔧", f"{SG_RATE:.2%}",
+            help="29,089 car deregistrations ÷ 651,302 cars — both LTA")
+c[3].metric("United States ⚠️", f"{US_RATE:.2%}",
+            help="Constructed — arithmetic below the chart")
 
 fig1 = go.Figure()
 fig1.add_bar(x=["EU-27"], y=[EU_RATE*100], marker_color=BLUE, width=0.5,
@@ -132,38 +131,23 @@ fig1.update_layout(height=400, yaxis_title="Vehicles leaving fleet, % of fleet (
                    legend=dict(orientation="h", y=1.12), margin=dict(t=30,b=10))
 st.plotly_chart(fig1, use_container_width=True)
 st.caption(
-    "**Claim:** these four bars are four different kinds of number, and each is "
-    "drawn to say so. Scope caveats, direction known and disclosed: EU numerator "
-    "includes vans over a cars-only denominator (overstated); *Japan's numerator "
-    "covers all vehicle classes under the law over a passenger-car denominator "
-    "(overstated); Singapore's deregistrations and the US estimate both include "
-    "exported vehicles, which the EU and Japan counts exclude. Higher is not "
-    "better or worse — the quantities are constructed differently."
+    "**Claim:** these four bars are four different kinds of number, each drawn to "
+    "say so. The US bar is the only constructed one: "
+    "**implied exits = 15,502,479 sales − 1,497,077 net fleet growth = "
+    "14,005,402**, over a 259.2M light-duty fleet — and it counts every exit "
+    "including used-vehicle exports, which the EU and Japan counts exclude. "
+    "Scope caveats, direction known: EU numerator includes vans over a cars-only "
+    "denominator; Japan's numerator covers all vehicle classes under the law "
+    "over a passenger-car denominator — both slightly overstated. Higher is not "
+    "better or worse; the quantities are constructed differently."
 )
-
-st.subheader("The check: implied vehicle lifetime vs. how long fleets actually live")
-lifetimes = pd.DataFrame({
-    "Region": ["EU-27","Japan","Singapore","United States"],
-    "Rate": [f"{EU_RATE:.2%}", f"{JP_RATE:.2%}", f"{SG_RATE:.2%}", f"{US_RATE:.2%}"],
-    "Implied lifetime = 1 ÷ rate 🔧": [f"{1/EU_RATE:.0f} years", f"{1/JP_RATE:.0f} years",
-                                       f"{1/SG_RATE:.0f} years", f"{1/US_RATE:.1f} years"],
-    "Average fleet age 📚": ["≈12.3 yrs (ACEA)","≈9.5 yrs (AIRIA)",
-                             "COE structure, ~10-yr certificates (LTA)",
-                             "≈12.5 yrs (S&P Global Mobility)"],
-})
-st.table(lifetimes)
-st.caption(
-    "**Claim:** at steady state, a scrappage rate implies an average vehicle "
-    "lifetime of 1 ÷ rate. The EU's documented rate implies a **60-year** vehicle "
-    "life against an actual average fleet age of ~12 years — an impossibility "
-    "that quantifies how much of the fleet's real exit flow the documented ELV "
-    "count does not capture, predominantly used-vehicle export. Japan's implied "
-    "23 years against a 9.5-year average age shows the same structure (1.83M "
-    "used vehicles exported in 2023 leave the recycling system uncounted). The "
-    "US implied 18.5 years is closest to plausible precisely because the "
-    "constructed estimate counts every exit, exports included. The gap between "
-    "implied and actual lifetime is the recycling gap, expressed in years."
-)
+with st.expander("Full numerator / denominator sourcing"):
+    st.markdown(f"""
+- **EU-27** ✅ — audited ELVs {EU_ELVS:,} (Eurostat env_waselvt) ÷ passenger cars {EU_FLEET:,} (Eurostat road_eqs_carpda)
+- **Japan** ✅* — ELVs collected for dismantling {JP_ELVS:,} (JARC manifest system, FY2023) ÷ passenger cars in use {JP_FLEET:,} (e-Stat/AIRIA, Mar 2023)
+- **Singapore** 🔧 — permanent car deregistrations {SG_DEREG:,} ÷ cars & station-wagons {SG_FLEET:,} (both LTA Annual Vehicle Statistics)
+- **US** ⚠️ — implied exits {US_RETIRE:,} (= FRED LTOTALNSA sales {US_SALES:,} − BTS 1-11 net fleet change {US_NET:,}) ÷ light-duty fleet {US_FLEET:,} (BTS 1-11, short + long wheelbase)
+""")
 
 st.subheader("Within the EU audit: a 7× spread")
 show_eea = st.toggle("Include EEA reporters (Norway, Iceland, Liechtenstein)", True)
@@ -177,15 +161,60 @@ fig2.update_layout(height=400, yaxis_title="Documented scrappage rate, 2023 (%)"
                    margin=dict(t=20,b=10))
 st.plotly_chart(fig2, use_container_width=True)
 st.caption("**Claim:** documented rates span 3.8% (Ireland) to 0.5% (Germany) "
-           "inside one audit regime — Germany's implied lifetime is ~196 years, "
-           "the export gap at its widest. Grey = EEA reporters.")
+           "inside one audit regime. Grey = EEA reporters.")
 with st.expander("Full country table"):
     st.dataframe(d.style.format({"ELVs":"{:,.0f}","Fleet":"{:,.0f}","Rate":"{:.2%}"}),
                  use_container_width=True)
 st.divider()
 
-# ============ 3 · Concordance ============
-st.header("③ Where the classifications align — and where they cannot")
+# ============ 3 · The consumer layer ============
+st.header("③ The consumer layer — replacement behavior drives every number above")
+st.markdown(
+    "A scrappage rate is the meeting point of two different events: a household's "
+    "**decision to replace** a vehicle, and the vehicle's **documented "
+    "end-of-life**. Comparing how long consumers actually keep vehicles against "
+    "the lifetime each region's scrappage rate implies (at steady state, "
+    "**implied lifetime = 1 ÷ rate**) shows how far apart those two events are "
+    "in each market."
+)
+fig3 = go.Figure()
+fig3.add_bar(x=REGIONS, y=AGES, name="Average fleet age / holding proxy 📚",
+             marker_color="#5d6d7e", width=0.35, offsetgroup=0,
+             hovertemplate="%{x}: %{y} yrs<extra></extra>")
+fig3.add_bar(x=REGIONS, y=[1/r for r in RATES],
+             name="Implied vehicle lifetime = 1 ÷ scrappage rate 🔧",
+             marker_color=RED, width=0.35, offsetgroup=1,
+             hovertemplate="%{x}: %{y:.0f} yrs implied<extra></extra>")
+fig3.update_layout(height=420, yaxis_title="Years", barmode="group",
+                   legend=dict(orientation="h", y=1.12), margin=dict(t=30,b=10))
+st.plotly_chart(fig3, use_container_width=True)
+st.table(pd.DataFrame({
+    "Region": REGIONS,
+    "Avg fleet age 📚": [f"{a} yrs ({s})" for a, s in zip(AGES, AGE_SRC)],
+    "Implied lifetime 🔧": [f"{1/r:.0f} yrs" for r in RATES],
+    "Gap": [f"{1/r - a:+.0f} yrs" for r, a in zip(RATES, AGES)],
+}))
+st.caption(
+    "**Claim:** replacement is a spending decision; documented scrappage is a "
+    "measurement event — and in every measured market they are decades apart. "
+    "EU consumers replace around year 12, yet the documented rate implies cars "
+    "live **60 years**: the difference is vehicles leaving the audit as used "
+    "exports, not deaths. Japan is sharper — inspection (shaken) costs push "
+    "replacement toward year 9–10, and 1.83M used vehicles exported in 2023 "
+    "(JAMA 📚) exit the recycling system young. Singapore's COE makes "
+    "replacement timing a policy price rather than a consumer choice. The US "
+    "is the near-reconciled case — implied 18.5 years against a 12.5-year "
+    "average age — precisely because its constructed count includes exports. "
+    "**The wedge between replacement and documented end-of-life is the "
+    "recycling gap's supply side: consumer upgrade cycles feed the export "
+    "flow that measurement loses.** Steady-state assumption stated; slowly "
+    "growing fleets understate implied lifetimes modestly — the EU and Japan "
+    "impossibilities survive the caveat."
+)
+st.divider()
+
+# ============ 4 · Concordance ============
+st.header("④ Where the classifications align — and where they cannot")
 st.markdown(
     "Cross-region comparison requires reconciling classification systems never "
     "designed to align. The concordance preserves each source's native label and "
@@ -201,20 +230,18 @@ st.caption("**Claim:** comparison is only possible at the combined light-duty "
            "(incl. kei vehicles) and Singapore's COE categories — not yet rowed.")
 st.divider()
 
-# ============ 4 · The gap and the path ============
-st.header("④ The US gap — and what a proof-of-concept measurement requires")
+# ============ 5 · The gap and the path ============
+st.header("⑤ The US gap — and what a proof-of-concept measurement requires")
 st.markdown(
     "For the US to sit on this map as a *measured* market, in order of impact:\n\n"
     "1. **An ELV count** — none is published; the estimate here cannot separate "
     "scrappage from used-vehicle export.\n"
     "2. **A used-export series** — Census USA Trade Online carries 10-digit HTS "
     "detail that UN Comtrade flattens; separating exports from the 14.0M exits "
-    "is the single largest refinement available, and would let the implied-"
-    "lifetime check above close.\n"
-    "3. **A vehicle-class concordance to M1/N1** — absent today (§3).\n"
-    "4. **Japan/Singapore concordance rows** — their rates are computed above; "
-    "aligning their vehicle classes to the shared concordance completes the "
-    "four-market panel.\n\n"
+    "would let the replacement-vs-lifetime wedge in §3 close.\n"
+    "3. **A vehicle-class concordance to M1/N1** — absent today (§4).\n"
+    "4. **Japan/Singapore concordance rows** — their rates are computed (§2); "
+    "aligning their vehicle classes completes the four-market panel.\n\n"
     "The EU series supports history to 2008; the US fleet series breaks at the "
     "2007 federal reclassification. A multi-year, four-market panel is feasible "
     "within those bounds."
@@ -234,7 +261,8 @@ with m1:
         "**🔧 Derived** — all four rates; implied lifetimes (1 ÷ rate, "
         "steady-state assumption)\n\n"
         "**📚 Literature-cited** — average fleet ages (ACEA, S&P Global "
-        "Mobility, AIRIA); Japan used-vehicle exports 2023 (JAMA, 1.83M)")
+        "Mobility, AIRIA); Singapore COE certificate term (LTA); Japan "
+        "used-vehicle exports 2023 (JAMA, 1.83M)")
 with m2:
     st.markdown(
         "**⚠️ Estimated** — US fleet exits 2023: 15,502,479 − 1,497,077 = "
@@ -245,7 +273,7 @@ with m2:
 st.header("Why trust this — and where it stops")
 st.table(pd.DataFrame({
     "Layer": ["Sources","EU rate","Japan rate","Singapore rate",
-              "US rate (estimate)","Implied lifetimes","Concordance"],
+              "US rate (estimate)","Consumer layer (§3)","Concordance"],
     "Trust basis": [
         "Counts from the project's approved register plus national statistical "
         "systems (Eurostat, BTS/FHWA, JARC, e-Stat/AIRIA, LTA); figures "
@@ -253,8 +281,9 @@ st.table(pd.DataFrame({
         "Reproduces Eurostat's published 2023 totals exactly",
         "System-reported numerator (manifest-tracked) over national fleet series",
         "Numerator and denominator from the same authority (LTA)",
-        "Every input a published series; arithmetic in full above",
-        "Pure arithmetic on the rates; steady-state assumption stated",
+        "Every input a published series; arithmetic stated in full (§2)",
+        "Implied lifetimes are pure arithmetic on the rates; ages are "
+        "literature-cited from fleet authorities",
         "12 labels, native classifications preserved, NO_EQUIVALENT permitted"],
     "Where it breaks": [
         "US estimate requires a sales series outside the register; FRED "
@@ -266,8 +295,8 @@ st.table(pd.DataFrame({
         "Deregistrations include exports; export-vs-scrap split unpublished",
         "Cannot separate scrappage from export; single year; not a like "
         "measurement to the measured bars — and drawn so",
-        "Steady state assumed; fleets are growing slowly, so lifetimes are "
-        "modestly understated — the EU/Japan impossibilities survive the caveat",
+        "Steady state assumed; slowly growing fleets understate implied "
+        "lifetimes modestly — the EU/Japan gaps survive the caveat",
         "Japan/Singapore classes not yet rowed"],
 }))
 st.caption(
