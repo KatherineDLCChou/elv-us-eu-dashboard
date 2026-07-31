@@ -101,6 +101,18 @@ DISP = pd.DataFrame({
 })
 DISP["Rate"] = DISP.ELVs / DISP.Fleet
 
+# EU-27 dispersion, derived from DISP so prose cannot drift from the chart.
+# EEA reporters (NO, IS, LI) are excluded from the quoted range: they are not
+# EU members and the aggregate reference line is EU-27.
+_EU_ONLY = DISP[~DISP.EEA]
+EU_TOP = _EU_ONLY.loc[_EU_ONLY.Rate.idxmax()]
+EU_BOTTOM = _EU_ONLY.loc[_EU_ONLY.Rate.idxmin()]
+EU_SPREAD = EU_TOP.Rate / EU_BOTTOM.Rate
+_DE = DISP[DISP.Country == "Germany"].iloc[0]
+DE_RATE = _DE.Rate
+DE_FLEET_SHARE = _DE.Fleet / EU_FLEET
+EU_RATE_EX_DE = (EU_ELVS - _DE.ELVs) / (EU_FLEET - _DE.Fleet)
+
 CW = pd.DataFrame([
     ("Eurostat (env_waselvt)","End-of-life vehicles (M1+N1)","light_duty_combined",""),
     ("Eurostat (road_eqs)","Passenger cars","passenger_car_M1",""),
@@ -275,7 +287,7 @@ claim("Two Eurostat measurements, one story when combined: the EU recycles "
       "exports never arrive. Any policy conclusion drawn from the 88.3% "
       "alone inherits that blind spot.")
 
-st.subheader("Within the EU audit: a sevenfold spread")
+st.subheader("Within the EU audit: a fourteenfold spread")
 ctl1, ctl2, ctl3 = st.columns([1.2, 1.2, 1.6])
 show_eea = ctl1.toggle("Include EEA reporters", True,
                        help="Norway, Iceland, Liechtenstein file under the "
@@ -314,18 +326,24 @@ fig2.add_vline(x=EU_RATE*100, line_dash="dot", line_color=CORAL,
 fig2.update_layout(height=680, xaxis_title="Documented scrappage rate, 2023 (%)",
                    xaxis_range=[0, 4.6], **PLOT)
 st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
-claim("Documented rates span 3.8% in Ireland to 0.5% in Germany inside one "
-      "audit regime, consistent with Germany's documented volume of "
-      "deregistered vehicles whose statistical whereabouts are unknown, "
-      "predominantly used exports. Eurostat's own anomaly documentation "
-      "corroborates the instability: Poland's audited recycling rate "
-      "exceeded 100% in 2019 and 2020 (backlog clearing), Greece's rates "
-      "collapsed in 2015 and 2019 when low scrap prices triggered "
-      "stockpiling, and Malta's 2023 rate dropped while material waited on "
-      "export pricing. Even audited rates move with export timing and metal "
-      "prices. Hollow markers are EEA reporters. <b>Romania is absent from "
-      "this chart</b>, having not reported ELV data since 2020; Eurostat "
-      "estimates its contribution inside the EU-27 aggregate line.")
+claim(f"Among EU-27 members, documented rates run from {EU_TOP.Rate:.2%} in "
+      f"{EU_TOP.Country} to {EU_BOTTOM.Rate:.2%} in {EU_BOTTOM.Country}, a "
+      f"<b>{EU_SPREAD:.0f}-fold range inside a single audit regime</b>. "
+      f"Germany is the member that moves the aggregate: at {DE_RATE:.2%} it "
+      f"carries {DE_FLEET_SHARE:.0%} of the EU-27 fleet, so the EU-wide rate "
+      f"excluding Germany is {EU_RATE_EX_DE:.2%} rather than {EU_RATE:.2%}. "
+      "That is consistent with Germany's documented volume of deregistered "
+      "vehicles whose statistical whereabouts are unknown, predominantly used "
+      "exports. Eurostat's own anomaly documentation corroborates the "
+      "instability: Poland's audited recycling rate exceeded 100% in 2019 and "
+      "2020 (backlog clearing), Greece's rates collapsed in 2015 and 2019 "
+      "when low scrap prices triggered stockpiling, and Malta's 2023 rate "
+      "dropped while material waited on export pricing. Even audited rates "
+      "move with export timing and metal prices. Hollow markers are EEA "
+      "reporters, which sit outside the EU-27 range quoted above. "
+      "<b>Romania is absent from this chart</b>, having not reported ELV data "
+      "since 2020; Eurostat estimates its contribution inside the EU-27 "
+      "aggregate line.")
 with st.expander("Full country table"):
     st.dataframe(d.sort_values("Rate", ascending=False)
                  .style.format({"ELVs":"{:,.0f}","Fleet":"{:,.0f}","Rate":"{:.2%}"}),
@@ -374,23 +392,23 @@ st.table(pd.DataFrame({
     "Implied lifetime (derived)": [f"{1/r:.0f} yrs" for r in RATES],
     "Gap": [f"{1/r - a:+.0f} yrs" for r, a in zip(RATES, AGES)],
 }))
-claim("Replacement is a spending decision, and documented scrappage is a "
-      "measurement event. In every measured market they are decades apart, "
-      "and the line between each pair of dots <b>is</b> the gap. EU consumers "
-      "replace around year 12, yet the documented rate implies cars live "
-      "<b>60 years</b>. That stretch is vehicles leaving the audit as used "
-      "exports, not deaths. Japan is sharper: inspection (shaken) costs push "
-      "replacement toward year 9 or 10, and 1.83M used vehicles exported in "
-      "2023 (JAMA) exit the recycling system young. Singapore's COE makes "
-      "replacement timing a policy price rather than a consumer choice. The "
-      "US is the near-reconciled case, an implied 18.5 years against a "
-      "12.5-year average age, precisely because its constructed count "
-      "includes exports. <b>The wedge between replacement and documented "
-      "end-of-life is the recycling gap's supply side. Consumer upgrade "
-      "cycles feed the export flow that measurement loses.</b> The "
-      "steady-state assumption is stated, and slowly growing fleets "
-      "understate implied lifetimes modestly. The EU and Japan "
-      "impossibilities survive the caveat.")
+claim(f"Replacement is a spending decision, and documented scrappage is a "
+      f"measurement event. In every measured market they are decades apart, "
+      f"and the line between each pair of dots <b>is</b> the gap. EU consumers "
+      f"replace around year 12, yet the documented rate implies cars live "
+      f"<b>{1/EU_RATE:.0f} years</b>. That stretch is vehicles leaving the "
+      f"audit as used exports, not deaths. Japan is sharper: inspection "
+      f"(shaken) costs push replacement toward year 9 or 10, and 1.83M used "
+      f"vehicles exported in 2023 (JAMA) exit the recycling system young. "
+      f"Singapore's COE makes replacement timing a policy price rather than a "
+      f"consumer choice. The US is the near-reconciled case, an implied "
+      f"{1/US_RATE:.0f} years against a 12.5-year average age, precisely "
+      f"because its constructed count includes exports. <b>The wedge between "
+      f"replacement and documented end-of-life is the recycling gap's supply "
+      f"side. Consumer upgrade cycles feed the export flow that measurement "
+      f"loses.</b> The steady-state assumption is stated, and slowly growing "
+      f"fleets understate implied lifetimes modestly. The EU and Japan "
+      f"impossibilities survive the caveat.")
 st.divider()
 
 # ================= 4 =================
@@ -547,7 +565,8 @@ with m1:
         'deregistrations & fleet (LTA)<br><br>'
         '<span class="badge b-der">Derived</span> — all four rates; implied '
         'lifetimes (1 ÷ rate, steady-state assumption); fleet-share recycled '
-        '(88.3% × 1.66%)<br><br>'
+        '(88.3% × 1.66%); the EU-27 spread and the rate excluding Germany '
+        '(Sec. 2)<br><br>'
         '<span class="badge b-lit">Literature</span> — average fleet ages '
         '(ACEA, S&P Global Mobility, AIRIA); Singapore COE certificate term '
         '(LTA); Japan used exports 2023 (JAMA, 1.83M); trade-mirror gap '
@@ -567,9 +586,10 @@ with m2:
 st.markdown('<div id="trust"></div>', unsafe_allow_html=True)
 st.header("Why trust this, and where it stops")
 st.table(pd.DataFrame({
-    "Layer": ["Sources","EU rate","Capture gap (Sec. 2)","Japan rate",
-              "Singapore rate","US rate (estimate)","Consumer layer (Sec. 3)",
-              "Export mirror (Sec. 4)","Concordance (Sec. 5)"],
+    "Layer": ["Sources","EU rate","EU dispersion (Sec. 2)","Capture gap (Sec. 2)",
+              "Japan rate","Singapore rate","US rate (estimate)",
+              "Consumer layer (Sec. 3)","Export mirror (Sec. 4)",
+              "Concordance (Sec. 5)"],
     "Trust basis": [
         "Counts come from the project's approved source register plus "
         "national statistical systems (Eurostat, BTS/FHWA, JARC, "
@@ -577,6 +597,9 @@ st.table(pd.DataFrame({
         "publications",
         "Reproduces Eurostat's published 2023 totals exactly, and the "
         "26 reporting member states sum to 1.69% independently",
+        "Range, spread, and the excluding-Germany rate are computed from the "
+        "member-state table on this page, not quoted, so the text cannot "
+        "drift from the chart",
         "Both inputs are Eurostat measurements: the 88.3% reuse+recycling "
         "rate (2023) and the collection share derived above",
         "System-reported numerator (manifest-tracked) over a national fleet "
@@ -600,6 +623,10 @@ st.table(pd.DataFrame({
         "ELVs (1.9%) estimated by Eurostat for Romania, which has not "
         "reported since 2020, so the numerator is 98% reported rather than "
         "wholly reported",
+        "The range endpoints are small fleets, where registration practice "
+        "rather than recycling behaviour can dominate. Germany is quoted "
+        "separately because it is large enough to move the aggregate, and "
+        "Romania is missing from the range entirely",
         "The two rates sit on slightly different scopes (weight-based "
         "compliance vs count-based collection); the order of magnitude, not "
         "the second decimal, carries the claim",
