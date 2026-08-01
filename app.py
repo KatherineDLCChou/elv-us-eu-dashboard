@@ -281,7 +281,7 @@ k1.metric("Of ELVs collected, recycled · Measured",
           help="EU-27 reuse + recycling rate, 2023, against the 85% Directive "
                "target (Eurostat)")
 k2.metric("Of the fleet, collected per year · Derived", f"{EU_RATE:.2%}",
-          help="4.26M audited ELVs ÷ 256.2M registered cars")
+          help="4.26M ELVs ÷ 256.2M registered cars")
 k3.metric("Of the fleet, recycled per year · Derived",
           f"{EU_RECYCLING_OF_COLLECTED * EU_RATE:.2%}",
           help="88.3% × 1.66%")
@@ -455,7 +455,7 @@ fig4.update_layout(height=400, barmode="group",
 st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
 claim("The red bars are barely visible next to the blue, and <b>that is the "
       "finding</b>. Partner countries record importing only 4 to 12% of what "
-      "Singapore reports exporting, a 10 to 25× disagreement, every year, in "
+      "Singapore reports exporting, a 9 to 24× disagreement, every year, in "
       "every corridor (Comtrade mirror, 2016 to 2020, as published in the "
       "pilot reconciliation). The same mirror cannot even be attempted for "
       "the US.")
